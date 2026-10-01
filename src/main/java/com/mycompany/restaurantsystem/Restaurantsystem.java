@@ -253,7 +253,7 @@ int quantity = input.nextInt();
 
     } while (again.equalsIgnoreCase("Y"));
 
-    order.displayOrder();
+    order.displayOrder(input);
 }
 
     // GET FOOD
