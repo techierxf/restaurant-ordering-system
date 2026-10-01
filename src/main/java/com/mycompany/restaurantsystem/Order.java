@@ -89,7 +89,7 @@ public class Order {
         System.out.printf("Change       : %.2f%n", change);
         System.out.println("==================================================");
         System.out.println("Payment successful!");
-        System.out.println("Thank you for your order!");
+        System.out.println("Thank you for ordering!");
 
     } else {
         System.out.println("Checkout cancelled.");

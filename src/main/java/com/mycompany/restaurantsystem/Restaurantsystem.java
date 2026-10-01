@@ -112,89 +112,185 @@ public class Restaurantsystem {
 }
 
     // UPDATE FOOD
-    private void updateFood() {
+    public void updateFood() {
 
-       System.out.print("Enter Food ID: ");
+    System.out.println("\n========== UPDATE FOOD ==========");
 
-        if (!input.hasNextInt()) {
-            System.out.println("Invalid Food ID! Please enter a number.");
-            input.nextLine();
-        return;
-      }
-            int id = input.nextInt();
-            input.nextLine();
+    System.out.print("Enter Food ID to update: ");
 
-        System.out.print("Enter new food name: ");
-        String name = input.nextLine();
-
-        System.out.print("Enter new price: ");
-
-        if (!input.hasNextDouble()) {
-             System.out.println("Invalid price! Please enter a number.");
-            input.nextLine();
+    if (!input.hasNextInt()) {
+        System.out.println("Invalid Food ID! Please enter a number.");
+        input.next();
         return;
     }
 
-        double price = input.nextDouble();
+    int foodID = input.nextInt();
+    input.nextLine();
 
-            System.out.print("Enter new quantity: ");
+    String sql = "SELECT * FROM foods WHERE food_id = ?";
 
-        if (!input.hasNextInt()) {
-            System.out.println("Invalid quantity! Please enter a number.");
-             input.nextLine();
-        return;
-    }
+    try (Connection conn = DatabaseConnection.getConnection();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-int quantity = input.nextInt();
+        stmt.setInt(1, foodID);
 
-        String sql = "UPDATE foods SET food_name=?, price=?, quantity=? WHERE food_id=?";
+        ResultSet rs = stmt.executeQuery();
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        if (rs.next()) {
 
-            ps.setString(1, name);
-            ps.setDouble(2, price);
-            ps.setInt(3, quantity);
-            ps.setInt(4, id);
+            String foodName = rs.getString("food_name");
 
-            int result = ps.executeUpdate();
+            System.out.println("\nFood Found:");
+            System.out.println("Food ID : " + foodID);
+            System.out.println("Food Name : " + foodName);
+            System.out.println("Current Price : " + rs.getDouble("price"));
+            System.out.println("Current Stock : " + rs.getInt("quantity"));
 
-            if (result > 0) {
-                System.out.println("Food updated successfully!");
-            } else {
-                System.out.println("Food ID not found.");
+            // Enter new price
+            double newPrice;
+
+            while (true) {
+                System.out.print("\nEnter New Price: ");
+
+                if (input.hasNextDouble()) {
+                    newPrice = input.nextDouble();
+
+                    if (newPrice >= 0) {
+                        break;
+                    }
+
+                    System.out.println("Price cannot be negative!");
+
+                } else {
+                    System.out.println("Invalid price! Please enter a number.");
+                    input.next();
+                }
             }
 
-        } catch (SQLException e) {
-            System.out.println("Database Error: " + e.getMessage());
+            // Enter new quantity
+            int newQuantity;
+
+            while (true) {
+                System.out.print("Enter New Quantity: ");
+
+                if (input.hasNextInt()) {
+                    newQuantity = input.nextInt();
+
+                    if (newQuantity >= 0) {
+                        break;
+                    }
+
+                    System.out.println("Quantity cannot be negative!");
+
+                } else {
+                    System.out.println("Invalid quantity! Please enter a whole number.");
+                    input.next();
+                }
+            }
+
+            // Update ONLY price and quantity
+            String updateSQL =
+                    "UPDATE foods SET price = ?, quantity = ? WHERE food_id = ?";
+
+            try (PreparedStatement updateStmt =
+                         conn.prepareStatement(updateSQL)) {
+
+                updateStmt.setDouble(1, newPrice);
+                updateStmt.setInt(2, newQuantity);
+                updateStmt.setInt(3, foodID);
+
+                int rows = updateStmt.executeUpdate();
+
+                if (rows > 0) {
+                    System.out.println("\nFood updated successfully!");
+                    System.out.println("Food Name : " + foodName);
+                    System.out.printf("New Price : %.2f%n", newPrice);
+                    System.out.println("New Stock : " + newQuantity);
+                }
+            }
+
+        } else {
+            System.out.println("\nFood ID not found!");
         }
+
+    } catch (SQLException e) {
+        System.out.println("Database Error: " + e.getMessage());
     }
+}
 
     // DELETE FOOD
-    private void deleteFood() {
+   public void deleteFood() {
 
-        System.out.print("Enter Food ID to delete: ");
-        int id = input.nextInt();
+    System.out.println("\n========== DELETE FOOD ==========");
 
-        String sql = "DELETE FROM foods WHERE food_id=?";
+    System.out.print("Enter Food ID to delete: ");
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+    if (!input.hasNextInt()) {
+        System.out.println("Invalid Food ID! Please enter a number.");
+        input.next();
+        return;
+    }
 
-            ps.setInt(1, id);
+    int foodID = input.nextInt();
+    input.nextLine();
 
-            int result = ps.executeUpdate();
+    String sql = "SELECT * FROM foods WHERE food_id = ?";
 
-            if (result > 0) {
-                System.out.println("Food deleted successfully!");
+    try (Connection conn = DatabaseConnection.getConnection();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+        stmt.setInt(1, foodID);
+
+        ResultSet rs = stmt.executeQuery();
+
+        if (rs.next()) {
+
+            // Display food before deleting
+            System.out.println("\nFood Found:");
+            System.out.println("ID       : " + rs.getInt("food_id"));
+            System.out.println("Name     : " + rs.getString("food_name"));
+            System.out.println("Price    : " + rs.getDouble("price"));
+            System.out.println("Stock    : " + rs.getInt("quantity"));
+            System.out.println("Category : " + rs.getString("category"));
+
+            // Confirmation
+            System.out.print("\nAre you sure you want to delete this food? (Y/N): ");
+            String confirm = input.nextLine();
+
+            if (confirm.equalsIgnoreCase("Y")) {
+
+                String deleteSQL = "DELETE FROM foods WHERE food_id = ?";
+
+                try (PreparedStatement deleteStmt =
+                             conn.prepareStatement(deleteSQL)) {
+
+                    deleteStmt.setInt(1, foodID);
+
+                    int rows = deleteStmt.executeUpdate();
+
+                    if (rows > 0) {
+                        System.out.println("\nFood deleted successfully!");
+                    }
+                }
+
+            } else if (confirm.equalsIgnoreCase("N")) {
+
+                System.out.println("\nDelete cancelled.");
+
             } else {
-                System.out.println("Food ID not found.");
+
+                System.out.println("\nInvalid choice! Delete cancelled.");
             }
 
-        } catch (SQLException e) {
-            System.out.println("Database Error: " + e.getMessage());
+        } else {
+
+            System.out.println("\nFood ID not found!");
         }
+
+    } catch (SQLException e) {
+        System.out.println("Database Error: " + e.getMessage());
     }
+}
 
     // ORDER FOOD
   private void orderFood() {
