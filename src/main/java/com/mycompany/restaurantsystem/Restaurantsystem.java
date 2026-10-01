@@ -112,7 +112,7 @@ public class Restaurantsystem {
 }
 
     // UPDATE FOOD
-    public void updateFood() {
+   public void updateFood() {
 
     System.out.println("\n========== UPDATE FOOD ==========");
 
@@ -217,7 +217,6 @@ public class Restaurantsystem {
         System.out.println("Database Error: " + e.getMessage());
     }
 }
-
     // DELETE FOOD
    public void deleteFood() {
 
